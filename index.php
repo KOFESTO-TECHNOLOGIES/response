@@ -2,7 +2,6 @@
 
 include_once 'Response.php';
 
-
 $o 			=	new Response( null, 'Asia/Calcutta' );
 
 $k 			=	$o->next();

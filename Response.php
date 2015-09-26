@@ -44,18 +44,6 @@ class Response extends DateTime	{
 		$next 		=	static::nextWorkingDay( $current );
 		$diff 		=	$next->diff( $current );
 
-		// echo 'Current<pre>';
-		// print_r( $current );
-		// echo '</pre>';
-
-		// echo 'Next<pre>';
-		// print_r( $next );
-		// echo '</pre>';
-
-		// echo 'Diff<pre>';
-		// print_r( $diff );
-		// echo '</pre>';
-
     	return $this->process( $current, $next, $diff );
     }
 
@@ -75,8 +63,6 @@ class Response extends DateTime	{
 
 			$i 			= 	0; // We have 0 future dates to start with
 
-			$nextDates 	= 	array(); // Empty array to hold the next 3 dates
-
 			while ($i < 1)	{
 
 			    $next->add(new DateInterval('P1D')); // Add 1 day
@@ -84,7 +70,6 @@ class Response extends DateTime	{
 			    // Note that you may need to do more complicated things for special holidays that don't use specific dates like "the last Friday of this month"
 			    if (in_array($next->format('D'), $weekend)) continue;
 			    // These next lines will only execute if continue isn't called for this iteration
-			    $nextDates[] = $next->format('Y-m-d');
 			    $i++;
 			}
     	}
@@ -151,7 +136,7 @@ class Response extends DateTime	{
         if ($object instanceof DateTimeZone) {
             return $object;
         }
-        $tz = @timezone_open((string) $object);
+        $tz = timezone_open((string) $object);
         if ($tz === false) {
             throw new InvalidArgumentException('Unknown or bad timezone ('.$object.')');
         }
