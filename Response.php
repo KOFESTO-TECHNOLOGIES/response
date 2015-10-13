@@ -23,7 +23,16 @@ class Response extends DateTime	{
      *
      * @var string
      */
-    protected static $toStringFormat = self::DEFAULT_TO_STRING_FORMAT;
+    protected static $toStringFormat =  self::DEFAULT_TO_STRING_FORMAT;
+
+    protected $weekends              =  array('Sun','Sat');
+
+    protected $holidays              =  array(
+                                            '01-01',    // New year's day
+                                            '04-03',    // Good friday
+                                            '05-01',    // Labour day
+                                            '12-25',    // Christmas day
+                                        );
 
     /**
      * Create a new Response instance.
@@ -55,9 +64,6 @@ class Response extends DateTime	{
     	}
     	else 	{
 
-    		$holidays 	=	array('12-24', '12-25');
-			$weekend 	=	array('Sun','Sat');
-
 			$next 		= 	clone $current;
 			$next->setTime(12,30);
 
@@ -66,9 +72,9 @@ class Response extends DateTime	{
 			while ($i < 1)	{
 
 			    $next->add(new DateInterval('P1D')); // Add 1 day
-			    if (in_array($next->format('m-d'), $holidays)) continue; // Don't include year to ensure the check is year independent
+			    if ( $this->isHoliday( $next ) ) continue; // Don't include year to ensure the check is year independent
 			    // Note that you may need to do more complicated things for special holidays that don't use specific dates like "the last Friday of this month"
-			    if (in_array($next->format('D'), $weekend)) continue;
+			    if ( $this->isWeekend( $next ) ) continue;
 			    // These next lines will only execute if continue isn't called for this iteration
 			    $i++;
 			}
@@ -102,17 +108,23 @@ class Response extends DateTime	{
 
     private function isHoliday( $current )	{
 
-    	$holidays 	=	array('08-26', '08-15');
-
-		if ( in_array( $current->format('m-d'), $holidays ) )
+		if ( in_array( $current->format('m-d'), $this->holidays ) )
 	        return true;
 
 	    return false;
 	}
 
-    private function isSunday( $current )	{
+    private function isSunday( $current )   {
 
-	    if ( $current->format('w') == 0) {
+        if ( $current->format('w') == 0) {
+            return true;
+        }
+        return false;
+    }
+
+    private function isWeekend( $current )	{
+
+	    if ( in_array($current->format('D'), $this->weekend) ) {
 	        return true;
 	    }
 	    return false;
