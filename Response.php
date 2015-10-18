@@ -124,7 +124,7 @@ class Response extends DateTime	{
 
     private function isWeekend( $current )	{
 
-	    if ( in_array($current->format('D'), $this->weekend) ) {
+	    if ( in_array($current->format('D'), $this->weekends) ) {
 	        return true;
 	    }
 	    return false;
