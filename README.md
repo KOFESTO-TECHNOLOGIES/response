@@ -7,3 +7,5 @@ It extends the DateTime class and takes a given time of the day, which defaults 
 The class considers a range of working hours, and whether it is Sunday or an holiday to exclude from the list working days.
 
 It can also return the formatted day according to a given format template.
+
+Added holidays reasons.
