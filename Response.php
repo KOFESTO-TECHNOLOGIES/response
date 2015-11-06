@@ -14,7 +14,7 @@ class Response extends DateTime	{
 
     const DEFAULT_OFFICE_CLOSE_TIME = 	'19:00:00';
 
-    const DEFAULT_OFFICE_CALL_TIME  = 	'PT12H30M';
+    const DEFAULT_OFFICE_CALL_TIME  = 	'12:30:00';
 
  	const DEFAULT_TEMPLATE 			=	'Within {{days}} & {{hour}}';
 
@@ -28,10 +28,18 @@ class Response extends DateTime	{
     protected $weekends              =  array('Sun','Sat');
 
     protected $holidays              =  array(
-                                            '01-01',    // New year's day
-                                            '04-03',    // Good friday
-                                            '05-01',    // Labour day
-                                            '12-25',    // Christmas day
+                                            '01-01' =>  array(
+                                                'New year\'s Day'
+                                            ),
+                                            '04-03' =>  array(
+                                                'Good friday'
+                                            ),
+                                            '05-01' =>  array(
+                                                'Labour day'
+                                            ),
+                                            '12-25' =>  array(
+                                                'Christmas day'
+                                            ),
                                         );
 
     /**
@@ -51,6 +59,7 @@ class Response extends DateTime	{
 		$current 	=	new static($datetime, $this->timezone);
 
 		$next 		=	static::nextWorkingDay( $current );
+
 		$diff 		=	$next->diff( $current );
 
     	return $this->process( $current, $next, $diff );
@@ -58,14 +67,13 @@ class Response extends DateTime	{
 
     private function nextWorkingDay( $current )	{
 
-    	if ( ( $current->format('H')  < 19 ) && ( ! $this->isSunday( $current ) ) && ( ! $this->isHoliday( $current ) ) )	{
+    	if ( ( $current->format('H')  < 19 ) && ( ! $this->isSunday( $current ) ) && ( ! $this->isWeekend( $current ) ) && ( ! $this->isHoliday( $current ) ) )	{
 
     		$next 	=	 new static( $current->format('Y-m-d ' . static::DEFAULT_OFFICE_CLOSE_TIME), $this->timezone );
     	}
     	else 	{
 
-			$next 		= 	clone $current;
-			$next->setTime(12,30);
+            $next   =    new static( $current->format('Y-m-d ' . static::DEFAULT_OFFICE_CALL_TIME), $this->timezone );
 
 			$i 			= 	0; // We have 0 future dates to start with
 
@@ -87,18 +95,29 @@ class Response extends DateTime	{
 
     	$result 			=	new stdClass;
 
-    	$result->text 		=	static::DEFAULT_TEMPLATE;
+    	$result->response 		=	static::DEFAULT_TEMPLATE;
 
     	if ( $diff->d == 1 )
-    		$result->text 	=	str_replace( '{{days}}', '1 day', $result->text );
+    		$result->response 	=	str_replace( '{{days}}', '1 day', $result->response );
     	else if ( $diff->d > 1 )
-    		$result->text 	=	str_replace( '{{days}}',  $diff->d . ' days', $result->text );
+    		$result->response 	=	str_replace( '{{days}}',  $diff->d . ' days', $result->response );
 
 		if ( $diff->h > 0 )
-    		$result->text 		=	str_replace( '{{hour}}', $diff->h . 'hr', $result->text );
+    		$result->response 		=	str_replace( '{{hour}}', $diff->h . 'hr', $result->response );
 
-    	$result->text 		=	str_replace( '{{days}} & ', '', $result->text );
-    	$result->text 		=	str_replace( '{{hour}}', '', $result->text );
+    	$result->response 		=	str_replace( '{{days}} & ', '', $result->response );
+    	$result->response 		=	str_replace( '{{hour}}', '', $result->response );
+
+        $result->reasons =   array();
+        $i               =   0; // We have 0 future dates to start with
+        $temp            =  clone $current;
+        do{
+
+            if ( $this->isHoliday( $temp ) ) $result->reasons[$temp->format('m-d')]  = $this->holidays[$temp->format('m-d')];
+            if ( $this->isWeekend( $temp ) ) $result->reasons[$temp->format('m-d')]  = $temp->format('l');
+            $temp->add(new DateInterval('P1D'));
+            $i++;
+        }while ($i < $diff->d);
 
     	$result->current 	=	$current;
     	$result->next 		=	$next;
@@ -108,7 +127,7 @@ class Response extends DateTime	{
 
     private function isHoliday( $current )	{
 
-		if ( in_array( $current->format('m-d'), $this->holidays ) )
+		if ( array_key_exists( $current->format('m-d'), $this->holidays ) )
 	        return true;
 
 	    return false;
